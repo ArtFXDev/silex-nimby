@@ -1,5 +1,7 @@
-import { NimbyMode } from "./nimbyMode";
+import NimbyMode from "./nimbyMode";
 
-export class ManualMode extends NimbyMode {
+class ManualMode extends NimbyMode {
   name: string = "manual"
 }
+
+export default new ManualMode()

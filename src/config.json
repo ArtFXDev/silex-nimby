@@ -1,13 +1,15 @@
 {
   "nimby": {
+    "daynight": {
+      "startHour": 18,
+      "endHour": 8
+    },
     "bladeURL": "http://localhost:9005",
     "autoMode": {
       "maxCPUUsage": 50,
       "usageCheckInterval": 1200,
       "switchCheckInterval": 120,
-      "startHour": 18,
-      "endHour": 8,
-      "maxUserIdleTime": 1200,
+      "maxUserIdleTime": 12000,
       "softwares": [
         "3dsmax",
         "Adobe Premiere Pro",

@@ -1,79 +1,56 @@
-import { NimbyMode } from "./nimbyMode";
-import { getBladeStatus } from "../nimby";
-import { logger } from "../logger";
-import path from "path";
+import NimbyMode from "./nimbyMode";
 import CONFIG from "../config.json";
-import osUtils from "os-utils";
-import findProcess from "find-process"
 import { setNimbyStatus } from "../nimby";
+import * as usageTest from "../usage"
 
-async function testRunningJobs() {
-  logger.debug("[NIMBY] Check for running jobs ...");
+const DAYMODE_CHECKS = [
+  usageTest.testIdle,
+  usageTest.testCPUUsage,
+  usageTest.testRunningProcesses,
+]
 
-  const bladeStatus = (await getBladeStatus()).data;
-  const runningJobs = bladeStatus.pids;
+const NIGHTMODE_CHECKS = [
+  usageTest.testIdle,
+  usageTest.testCPUUsage,
+]
 
-  if (runningJobs.length > 0) {
-    return {value: true, reason: ""};
-  }
-
-  return {value: false, reason: ""};
-}
-
-async function testUserActive() {
-  const idleTime = powerMonitor.getSystemIdleTime();
-  return idleTime < CONFIG.nimby.autoMode.maxUserIdleTime;
-}
-
-async function testCPUUsage() {
-  logger.debug("[NIMBY] Check for CPU usage ...");
-
-  const cpuUsage = await new Promise<number>(resolve => {
-    osUtils.cpuUsage(cpu => resolve(Math.round(cpu * 100)));
-  });
-
-  return {value: cpuUsage > CONFIG.nimby.autoMode.maxCPUUsage, reason: ""}
-}
-
-async function testRunningProcesses() {
-  logger.debug("[NIMBY] Check for running processes ...");
-
-  const processes = await findProcess("name", "");
-  for (const process of processes) {
-    const processName = path.parse(process.name).name;
-
-    if (CONFIG.nimby.autoMode.softwares.includes(processName)) {
-      return {value: true, reason: ""};
-    }
-  }
-
-  return {value: false, reason: ""};
-}
-
-async function testUsageDay() {
-  logger.debug("[NIMBY] Day mode usage check ...");
-
-  const checks = [
-    testRunningJobs,
-    testCPUUsage,
-    testRunningProcesses,
-  ]
-  checks.forEach(async (check) => {
-    const result = await check()
-    if(result) {
-      setNimbyStatus({...result})
-    }
-  })
-}
 
 export class AutoMode extends NimbyMode {
   name: string = "auto"
   interval: string = "auto"
+  checkList: usageTest.UsageCheck[] = DAYMODE_CHECKS
+  intervals: NodeJS.Timer[] = []
 
   async init() {
-    setInterval(() => {
-      testUsageDay();
-    }, CONFIG.nimby.autoMode.usageCheckInterval * 10000);
+    await this.checkMode()
+    this.intervals.push(setInterval(this.checkMode, CONFIG.nimby.autoMode.usageCheckInterval * 10000));
+    await this.checkStatus()
+    this.intervals.push(setInterval(this.checkStatus, CONFIG.nimby.autoMode.usageCheckInterval * 10000));
   };
-  async close() {};
+  async close() {
+    this.intervals.forEach(interval => {
+      clearInterval(interval)
+    })
+  };
+
+  async checkMode() {
+    const hour = new Date().getHours();
+
+    const timeRange =
+      hour >= CONFIG.nimby.daynight.startHour ||
+      hour <= CONFIG.nimby.daynight.endHour;
+  
+    this.checkList = timeRange ? DAYMODE_CHECKS : NIGHTMODE_CHECKS
+  }
+
+  async checkStatus() {
+    for(const check of this.checkList) {
+      const result = await check()
+      if(result.value) {
+        setNimbyStatus({...result})
+      }
+    }
+  }
 }
+
+export default new AutoMode()

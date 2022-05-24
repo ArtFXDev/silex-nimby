@@ -14,15 +14,13 @@ if (!fs.existsSync(silexLogDir)) {
 
 // Setting the log level (debug if we are in development mode)
 const devMode = process.env.NODE_ENV === "development";
-
-export const logger = pino(
-  {
-    prettyPrint: {
-      colorize: devMode,
-      translateTime: "mm/dd/yyyy - HH:MM:ss",
-      ignore: "pid,hostname",
-      messageFormat: "[silex-desktop] {msg}",
-    },
+const pinoOptions = {
+  prettyPrint: {
+    colorize: devMode,
+    translateTime: "mm/dd/yyyy - HH:MM:ss",
+    ignore: "pid,hostname",
+    messageFormat: "[silex-desktop] {msg}",
   },
-  devMode ? undefined : fs.createWriteStream(path.join(silexLogDir, ".silex_desktop_log"))
-);
+}
+
+export const logger = pino(...(devMode ? [pinoOptions] : [pinoOptions, fs.createWriteStream(path.join(silexLogDir, ".silex_desktop_log"))]));

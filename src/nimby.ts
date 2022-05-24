@@ -1,17 +1,13 @@
 import { logger } from "./logger";
 import axios from "axios";
 import CONFIG from "./config.json";
+import { NimbyStatus } from "./types"
 
-interface NimbyStatus {
-  value: boolean
-  mode: string
-  reason: string
-}
-
-const currentStatus: NimbyStatus = {
+export const currentStatus: NimbyStatus = {
   value: true,
   mode: "auto",
-  reason: "Default status",
+  logged: false,
+  usage: { type: "none" },
 }
 
 export async function setNimbyStatus(newStatus: Partial<NimbyStatus>) {
@@ -27,4 +23,7 @@ export async function getBladeStatus() {
   let response = await axios.get(`${CONFIG.nimby.bladeURL}/blade/status`);
   response.data.nimbyON = response.data.nimby !== "None";
   return response;
+}
+
+export async function startNimby() {
 }
