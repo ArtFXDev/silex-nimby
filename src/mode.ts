@@ -38,6 +38,6 @@ async function checkAutoMode() {
   }
 }
 
-export function initNimby() {
+export function initAutoSwitch() {
   setInterval(checkAutoMode, CONFIG.nimby.autoMode.switchCheckInterval * 1000)
 }

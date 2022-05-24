@@ -1,3 +1,7 @@
 import { initAPI } from "./routes";
+import { initAutoSwitch } from "./mode";
 
-initAPI()
+export function initNimby() {
+  initAutoSwitch()
+  initAPI()
+}
