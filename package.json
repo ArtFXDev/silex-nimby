@@ -1,5 +1,9 @@
 {
-  "name": "silex-nimby",
+  "name": "@artfxdev/silex-nimby",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArtFXDev/silex-nimby"
+  },
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
