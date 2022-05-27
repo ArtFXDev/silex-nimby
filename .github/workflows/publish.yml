@@ -21,6 +21,8 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@ArtFXDev'
 
+      - run: npm i --include=dev
+      - run: tsc
       - run: npm ci
       - run: npm publish --access public
         env:
